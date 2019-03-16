@@ -37,7 +37,7 @@ map a LinkHints.activateModeToOpenInNewTab
 map A LinkHints.activateModeToOpenInNewForegroundTab
 map c createTab
 map / goBack
-map {goForward
+map { goForward
 
 map = Vomnibar.activateBookmarksInNewTab
 map u Vomnibar.activate
