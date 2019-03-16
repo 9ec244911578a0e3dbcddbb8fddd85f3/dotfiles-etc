@@ -1,0 +1,295 @@
+Arch-Linx Installation Guide using LVM inside a luks encrypted Partition and Grub as Bootloader on an EFI-Device 
+
+
+
+#prepare disk  (erase all Data)
+shred -v /dev/sda
+
+
+#set Font and Keyboard -adjust accordingly
+loadkeys de-latin1-nodeadkeys
+setfont lat9w-16
+
+
+#Partition Disk
+fdisk
+	#gpt partition table
+	g
+
+	#bootpartition (EFI-System)
+	n
+	1
+	default
+	+512MiB
+	t
+	1
+
+	#lvm partition
+	n
+	2
+	default
+	default
+	t
+	2
+	31
+
+	w
+ 
+#Your Partitions
+
+#/dev/sda1	512MiB	EFI-System
+#/dev/sda2	XGiB	Linux-lvm
+
+#encrypt and open /dev/sda2 (with the container cryplvm)
+cryptsetup luksFormat --type luks2 /dev/sda2
+cryptsetup open /dev/sda2 cryptlvm
+
+#create Physical Volume and Volume Group (SystemVG)
+pvcreate /dev/mapper/cryptlvm
+vgcreate SystemVG /dev/mapper/cryptlvm
+
+#create Logical Volumes swap, root, and home  -adjust accordingly, you can increase and decrease the Volume later
+lvcreate -L 12GiB SystemVG -n swap
+lvcreate -L 32GiB SystemVG -n root
+lvcreate -L 128GiB SystemVG -n home 
+
+#Format your partition /dev/sda1 and your LVs
+mkfs.ext4 /dev/SystemVG/root 
+mkfs.ext4 /dev/SystemVG/home
+mkfs.vfat -F32 /dev/sda1
+mkswap /dev/SystemVG/swap
+
+#mount and swapon
+mkdir /mnt/boot
+mkdir /mnt/home
+swapon /dev/SystemVG/swap
+mount /dev/sda1 /mnt/boot
+mount /dev/SystemVG/root /mnt
+mount /dev/SystemVG/home /mnt/home
+
+#making Grub-installation work on lvm
+mkdir /mnt/hostrun
+mount --bind /run /mnt/hostrun 
+
+#Internet Connection with Wlan
+wifi-menu
+#and go from there
+
+#Ethernet 
+ip address 
+#check for Ethernet ???
+dhcpcd <>
+
+#backup and setup pacman Server
+cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrolist.bak
+nano /etc/pacman.d/mirrorlist 
+#comment all distant servers until your first couple servers are nearby
+
+#Install basic System
+pacstrap -i /mnt base base-devel 
+#recommended wayland sway dialog intel-ucode wpa_supplicant vim zsh 
+
+#generate fstab (and edit if on a SSD)
+genfstab -pU /mnt > /mnt/etc/fstab
+vim /mnt/etc/fstab
+#add defaults,noatime,discard on root and home defaults,noatime,discard on swap
+cat /mnt/etc/fstab <<_EOF_
+
+
+# /dev/mapper/SystemVG-root
+UUID=<X>	/         	ext4      	rw,defaults,noatime,discard	0 1
+
+# /dev/mapper/SystemVG-home
+UUID=<Y>	/home     	ext4      	rw,defaults,noatime,discard	0 2
+
+# /dev/sda1
+UUID=<Z>      	/boot     	vfat      	rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,utf8,errors=remount-ro	0 2
+
+# /dev/mapper/SystemVG-swap
+UUID=<X_2>	none      	swap      	defaults,noatime,discard,pri=-2	0 0
+
+_EOF_
+
+#Change Root
+arch-chroot /mnt 
+
+#making Grub-installation work part2
+mkdir /run/lvm
+mount --bind /hostrun/lvm /run/lvm
+
+#configuring some basic stuff -adjust accordingly
+echo <hostname> > /etc/hostname
+echo LANG=en_US.UTF-8 > /etc/locale.conf
+vim /etc/locale-gen
+#uncomment your language
+#recommended : en_US.UTF-8 in addition for various logs
+locale-gen
+echo KEYMAP=de-latin1-nodeadkeys > /etc/vconsole.conf
+echo FONT=lat9w-16 >> /etc/vconole.conf
+ln -sf /usr/share/zoneinfo/<yourzone> /etc/localtime
+vim /etc/hosts
+#add loopback
+cat /etc/hosts
+<<_EOF_
+127.0.0.1	localhost
+::1		localhost
+_EOF_
+passwd
+
+#install grub and efibootmgr
+pacman -S grub efibootmgr
+mkdir /boot/grub
+grub-mkconfig -o /boot/grub/grub.cfg
+grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB (--removable --recheck)
+ls -l /dev/disk/by-uuid
+#write down the UUID from /dev/sda2 
+#add kernel boot parameter and lvm as preload module (encryption and hibernation) 
+cryptdevice=UUID=<UUID>:cryptlvm root=/dev/SystemVG/root resume=/dev/SystemVG/swap
+vim /etc/default/grub
+
+<<_EOF_
+# GRUB boot loader configuration
+
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=1
+GRUB_DISTRIBUTOR="Arch"
+GRUB_CMDLINE_LINUX_DEFAULT="cryptdevice=UUID=<UUID>:cryptlvm root=/dev/SystemVG/root resume=/dev/SystemVG/swap " 
+GRUB_CMDLINE_LINUX=""
+
+# Preload both GPT and MBR modules so that they are not missed
+GRUB_PRELOAD_MODULES="part_gpt part_msdos lvm" #xhci-hcd for booting from usb3 
+
+# Uncomment to enable booting from LUKS encrypted devices
+#GRUB_ENABLE_CRYPTODISK=y
+
+# Uncomment to enable Hidden Menu, and optionally hide the timeout count
+#GRUB_HIDDEN_TIMEOUT=5
+#GRUB_HIDDEN_TIMEOUT_QUIET=true
+
+# Uncomment to use basic console
+GRUB_TERMINAL_INPUT=console
+
+# Uncomment to disable graphical terminal
+#GRUB_TERMINAL_OUTPUT=console
+
+# The resolution used on graphical terminal
+# note that you can use only modes which your graphic card supports via VBE
+# you can see them in real GRUB with the command `vbeinfo'
+GRUB_GFXMODE=auto
+
+# Uncomment to allow the kernel use the same resolution used by grub
+GRUB_GFXPAYLOAD_LINUX=keep
+
+# Uncomment if you want GRUB to pass to the Linux kernel the old parameter
+# format "root=/dev/xxx" instead of "root=/dev/disk/by-uuid/xxx"
+#GRUB_DISABLE_LINUX_UUID=true
+
+# Uncomment to disable generation of recovery mode menu entries
+GRUB_DISABLE_RECOVERY=true
+
+# Uncomment and set to the desired menu colors.  Used by normal and wallpaper
+# modes only.  Entries specified as foreground/background.
+#GRUB_COLOR_NORMAL="light-blue/black"
+#GRUB_COLOR_HIGHLIGHT="light-cyan/blue"
+
+# Uncomment one of them for the gfx desired, a image background or a gfxtheme
+#GRUB_BACKGROUND="/path/to/wallpaper"
+#GRUB_THEME="/path/to/gfxtheme"
+
+# Uncomment to get a beep at GRUB start
+#GRUB_INIT_TUNE="480 440 1"
+
+# Uncomment to make GRUB remember the last selection. This requires to
+# set 'GRUB_DEFAULT=saved' above.
+#GRUB_SAVEDEFAULT="true"
+
+_EOF_
+
+#update 
+grub-mkconfig -o /boot/grub/grub.cfg
+
+
+#edit your hooks (encryption and hibernation)
+vim /etc/mkintcpio.conf
+HOOKS=(base udev autodetect keyboard keymap consolefont modconf block encrypt lvm2 filesystems resume fsck
+<<_EOF_
+
+# vim:set ft=sh
+# MODULES
+# The following modules are loaded before any boot hooks are
+# run.  Advanced users may wish to specify all system modules
+# in this array.  For instance:
+#     MODULES=(piix ide_disk reiserfs)
+MODULES=()
+
+# BINARIES
+# This setting includes any additional binaries a given user may
+# wish into the CPIO image.  This is run last, so it may be used to
+# override the actual binaries included by a given hook
+# BINARIES are dependency parsed, so you may safely ignore libraries
+BINARIES=()
+
+# FILES
+# This setting is similar to BINARIES above, however, files are added
+# as-is and are not parsed in any way.  This is useful for config files.
+FILES=()
+
+# HOOKS
+# This is the most important setting in this file.  The HOOKS control the
+# modules and scripts added to the image, and what happens at boot time.
+# Order is important, and it is recommended that you do not change the
+# order in which HOOKS are added.  Run 'mkinitcpio -H <hook name>' for
+# help on a given hook.
+# 'base' is _required_ unless you know precisely what you are doing.
+# 'udev' is _required_ in order to automatically load modules
+# 'filesystems' is _required_ unless you specify your fs modules in MODULES
+# Examples:
+##   This setup specifies all modules in the MODULES setting above.
+##   No raid, lvm2, or encrypted root is needed.
+#    HOOKS=(base)
+#
+##   This setup will autodetect all modules for your system and should
+##   work as a sane default
+#    HOOKS=(base udev autodetect block filesystems)
+#
+##   This setup will generate a 'full' image which supports most systems.
+##   No autodetection is done.
+#    HOOKS=(base udev block filesystems)
+#
+##   This setup assembles a pata mdadm array with an encrypted root FS.
+##   Note: See 'mkinitcpio -H mdadm' for more information on raid devices.
+#    HOOKS=(base udev block mdadm encrypt filesystems)
+#
+##   This setup loads an lvm2 volume group on a usb device.
+#    HOOKS=(base udev block lvm2 filesystems)
+#
+##   NOTE: If you have /usr on a separate partition, you MUST include the
+#    usr, fsck and shutdown hooks.
+HOOKS=(base udev autodetect keyboard keymap consolefont modconf block encrypt lvm2 filesystems resume fsck) 
+#HOOKS=(base udev keyboard block autodetect keymap consolefont modconf encrypt lvm2 filesystems resume fsck
+
+#HOOKS=(base systemd keyboard block autodetect sd-vconsole modconf sd-encrypt sd-lvm2 filesystems fsck
+# COMPRESSION
+# Use this to compress the initramfs image. By default, gzip compression
+# is used. Use 'cat' to create an uncompressed image.
+#COMPRESSION="gzip"
+#COMPRESSION="bzip2"
+#COMPRESSION="lzma"
+#COMPRESSION="xz"
+#COMPRESSION="lzop"
+#COMPRESSION="lz4"
+
+# COMPRESSION_OPTIONS
+# Additional options for the compressor
+#COMPRESSION_OPTIONS=()
+
+_EOF_
+
+#update 
+mkinitcpio -p linux
+
+#exit arch-chroot, umount all, swapoff and reboot
+exit
+swapoff -a
+umount -R /mnt
+reboot
