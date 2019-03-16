@@ -1,0 +1,97 @@
+unmapALL
+map n scrollLeft
+map t scrollDown
+map r scrollUp
+map d scrollRight
+
+map zz scrollToTop
+map Z scrollToBottom
+map - scrollPageDown
+map ) scrollPageUp
+map N scrollToLeft
+map D scrollToRight
+map T scrollFullPageDown
+map R scrollFullPageUp
+map y Marks.activateCreateMode
+map @ Marks.activateGotoMode
+map > moveTabRight
+map < moveTabLeft
+map X restoreTab
+map x removeTab
+map i enterInsertMode
+map p enterVisualMode
+map P enterVisualLineMode
+map w reload
+map m previousTab
+map , nextTab
+map ( firstTab
+map : lastTab
+map <space> enterFindMode
+map l performFind
+map L performBackwardsFind
+map q togglePinTab
+map Q toggleMuteTab
+map C duplicateTab
+map e LinkHints.activateMode
+map a LinkHints.activateModeToOpenInNewTab
+map A LinkHints.activateModeToOpenInNewForegroundTab
+map c createTab
+map / goBack
+map {goForward
+map mages DuckDuckGo Pictures
+
+du: https://www.duden.de/suchen/dudenonline/%s duden& Vomnibar.activateTabSelection
+map = Vomnibar.activateBookmarksInNewTab
+map u Vomnibar.activate
+map s Vomnibar.activateInNewTab
+map ſ Vomnibar.activateBookmarks
+map B visitPreviousTab
+map o openCopiedUrlInCurrentTab
+map ^ openCopiedUrlInNewTab
+map K copyCurrentUrl
+map E Vomnibar.activateEditUrl
+map } Vomnibar.activateEditUrlInNewTab
+map € showHelp
+
+
+map | nextFrame 
+map $ mainFrame
+map + focusInput
+
+
+w: https://www.wikipedia.org/w/index.php?title=Special:Search&search=%s Wikipedia
+aw: https://wiki.archlinux.org/index.php?title=Special%3ASearch&search=%s Arch Wiki
+aur: https://aur.archlinux.org/packages/?K=%s AUR
+ap: https://www.archlinux.org/packages/?sort=&q=%s Arch Repository
+af: https://bbs.archlinux.org/search.php?search_id=%s Arch Forum
+gw: https://wiki.gentoo.org/index.php?title=Special%3ASearch&search=%s&go=Go Gentoo Wiki
+gf: https://forums.gentoo.org/search.php?mode=results Gentoo Forum
+gp: https://packages.gentoo.org/packages/search?q=%25s Gentoo Package
+vw: https://wiki.voidlinux.org/index.php?search=%s&title=Special%3ASearch&go=Go Void Wiki
+at: https://alternativeto.net/software/%s/ AlternativeTo
+so: https://stackoverflow.com/search?q=%s Stackoverflow
+sl: https://tex.stackexchange.com/search?q=%s LaTeX Stackexchange
+su: https://unix.stackexchange.com/search?q=%s Unix Stackexchange
+sc: https://crypto.stackexchange.com/search?q=%s Crypto Stackexchange
+srp: https://raspberrypi.stackexchange.com/search?q=%s Raspberry Pi Stackexchange
+sr: https://reverseengineering.stackexchange.com/search?q=%s Reverse Engineering Stackexchange
+sn: https://networkengineering.stackexchange.com/search?q=%s Network Engineering Stackexchange
+sod: https://opendata.stackexchange.com/search?q=%s Open Data Stackexchange
+sv: https://vi.stackexchange.com/search?q=%s Vim Stackexchange
+sq: https://quantumcomputing.stackexchange.com/search?q=%s Quantum Computing Stackexchange
+sio: https://iot.stackexchange.com/search?q=%s IoT Stackexchange
+sai: https://ai.stackexchange.com/search?q=%s AI Stackexchange
+so: https://opensource.stackexchange.com/search?q=%s OpenSource Stackexchange
+slatin: https://latin.stackexchange.com/search?q=%s Latin Stackexchange
+sd: https://datascience.stackexchange.com/search?q=%s Data Science Stackexchange
+st: https://tor.stackexchange.com/search?q=%s Tor Stackexchange
+spol: https://politics.stackexchange.com/search?q=%s Politics Stackexchange
+sg: https://codegolf.stackexchange.com/search?q=%s CodeGolf Stackexchange
+sdb: https://dba.stackexchange.com/search?q=%s Database Stackexchange
+sp: https://physics.stackexchange.com/search?q=%s Physics Stackexchange
+ss: https://security.stackexchange.com/search?q=%s Security Stackexchange
+sm: https://math.stackexchange.com/search?q=%s Math Stackexchange
+sch: https://chemistry.stackexchange.com/search?q=%s Chemistry Stackexchange
+d: https://duckduckgo.com/?q=%s DuckDuckGo
+dp: https://duckduckgo.com/?q=%s&iax=images&ia=images DuckDuckGo Pictures
+du: https://www.duden.de/suchen/dudenonline/%s duden
