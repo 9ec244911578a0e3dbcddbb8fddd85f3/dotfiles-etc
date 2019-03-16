@@ -38,9 +38,7 @@ map A LinkHints.activateModeToOpenInNewForegroundTab
 map c createTab
 map / goBack
 map {goForward
-map mages DuckDuckGo Pictures
 
-du: https://www.duden.de/suchen/dudenonline/%s duden& Vomnibar.activateTabSelection
 map = Vomnibar.activateBookmarksInNewTab
 map u Vomnibar.activate
 map s Vomnibar.activateInNewTab
